@@ -55,12 +55,32 @@ def lookup_listing(address: str) -> dict:
     return rec
 
 
-def comp_stats(zip_code: str, beds: int) -> dict:
-    # TODO(BLAKE): implement.
-    # 1. filter RECENT_SALES by zip_code AND beds
-    # 2. median of sale_price (sort; even n -> mean of middle two)
-    # 3. return {"median": ..., "n": ...}  ; if n == 0 return {"error": "..."}
-    raise NotImplementedError
+def comp_stats(zip_code: str, beds:int) -> dict:
+    
+    #filters; keep only this zip's sales:
+    matches = []
+    for sale in RECENT_SALES:
+        if sale["zip_code"] == zip_code and sale["beds"] == beds:
+            matches.append(sale)
+
+    #extract matches
+    prices = [sale["sale_price"] for sale in matches]
+
+    #guard, then sort
+    if not prices:
+        return {"error": f"no comps found for zip {zip_code}"}
+    prices.sort()
+
+    #median split
+    n = len(prices)
+    mid =n // 2
+    if n % 2 == 1:
+        median = prices[mid]
+    else: 
+        median = (prices[mid - 1] + prices[mid]) / 2
+
+    return {"median_sale_price": median, "comp_count": n, "zip_code": zip_code}
+
 
 
 TOOL_REGISTRY = {
@@ -81,3 +101,7 @@ def execute_tool(name: str, tool_input: dict) -> dict:
         return {"error": f"bad input for {name!r}: {e}"}
     except Exception as e:
         return {"error": f"{name!r} failed: {e}"}
+
+#test_block
+if __name__ == "__main__": 
+    print(execute_tool("comp_stats", {"zip_code": "21043", "beds":3}))
