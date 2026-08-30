@@ -1,0 +1,3 @@
+# core runs on stdlibs only - no installs required.
+# deterministic mock client, no framework: a clean stdlib loop.
+# anthropic>=0.40.0 # when swapping in the real model path
