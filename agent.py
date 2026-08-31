@@ -20,7 +20,7 @@ RUN
   python run.py            # happy path
   python run.py --broken   # malformed variant
 
-Say it aloud while you type: what, why, which gate.
+# nb: saying aloud while I type - walk and talk through during live demo - what, why, which gate.
 """
 
 def run_agent(client, user_query):
