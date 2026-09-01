@@ -1,0 +1,4 @@
+# delphi is the web front for bright-agent. it needs the agent's requirements plus a web server.
+-r ../requirements.txt
+flask>=3.0
+gunicorn>=21.2       # render's start command; not needed for `python -m delphi.app` locally

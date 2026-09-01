@@ -1,3 +1,9 @@
-# core runs on stdlibs only - no installs required.
-# deterministic mock client, no framework: a clean stdlib loop.
-# anthropic>=0.40.0 # when swapping in the real model path
+# the agent loop, tools, data layer, verdict, guardrails, traces and eval run on the
+# python standard library. nothing to install for `python run.py` or `python eval.py`.
+
+numpy>=1.24            # ml/ - features, closed-form ridge, hand-written mlp
+
+# optional cross-checks and doors (each is imported lazily; absence is handled)
+# scikit-learn>=1.3    # ml/evaluate_models.py: ridge + gradient boosting as reference points
+# torch>=2.0           # ml/mlp_torch.py: the same network under autograd
+# anthropic>=0.40.0    # clients.AnthropicClient: the real-model path (needs ANTHROPIC_API_KEY)

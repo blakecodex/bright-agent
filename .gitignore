@@ -1,1 +1,6 @@
 __pycache__/
+*.pyc
+traces/*.jsonl
+traces/eval_latest.json
+data/cache/bright.db
+.env

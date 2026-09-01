@@ -1,11 +1,11 @@
-"""run.py - do not edit"""
+"""run.py — do not edit. Runs your agent against the mocks."""
 import sys
 
 from mock_client import MockClient, MalformedMockClient
 from agent import run_agent
 
 
-def main(): # runs agent against the mocks
+def main():
     broken = "--broken" in sys.argv
     client = MalformedMockClient() if broken else MockClient()
     label = "MALFORMED" if broken else "HAPPY PATH"

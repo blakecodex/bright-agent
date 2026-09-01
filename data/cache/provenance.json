@@ -1,0 +1,23 @@
+{
+  "philly_sales": {
+    "source": "City of Philadelphia, Office of Property Assessment - opa_properties_public via the Carto SQL API",
+    "endpoint": "https://phl.carto.com/api/v2/sql",
+    "query": "see data/fetch_philly.py SELECT - sale_price > 50000, SINGLE FAMILY + MULTI FAMILY, sale_date >= 2025-09-01, ORDER BY md5(parcel||sale_date)",
+    "pulled_at_utc": "2026-09-01T04:14:00Z",
+    "pages_committed": 4,
+    "rows_committed": 2000,
+    "rows_available_in_window": 11500,
+    "note": "pages are a deterministic pseudo-random shuffle of the window, so 4 pages is a fair sample. run `python bright.py fetch` to pull the full window (23 pages) or `--since 2024-01-01` for ~40k rows.",
+    "latest_recorded_sale": "2026-08-26",
+    "license": "City of Philadelphia open data, public domain / CC0-style terms per opendataphilly.org"
+  },
+  "redfin_market_tracker": {
+    "source": "Redfin Data Center - county_market_tracker.tsv000.gz (monthly, all counties)",
+    "endpoint": "https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_market_tracker/county_market_tracker.tsv000.gz",
+    "file_last_modified": "2026-06-02",
+    "pulled_at_utc": "2026-09-01T04:20:00Z",
+    "filter": "13 bright-footprint counties, property_type in (All Residential, Single Family Residential), monthly rows, period_begin >= 2023-01-01",
+    "rows_committed": 1066,
+    "attribution": "data from Redfin (redfin.com/news/data-center); redfin asks for attribution when its data is used"
+  }
+}

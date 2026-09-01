@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Delphi — pricing counsel</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='delphi.css') }}">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div>
+      <div class="wordmark">Delphi</div>
+      <div class="tagline">Pricing counsel for listing agents — evidence first, a person decides.</div>
+    </div>
+    <div class="chips" id="health-chips">
+      <span class="chip">engine <b>loading…</b></span>
+    </div>
+  </div>
+  <div class="meander" aria-hidden="true"></div>
+</header>
+
+<main class="wrap grid">
+
+  <!-- ============================== left: ask + results -->
+  <section class="col-main">
+
+    <div class="card ask">
+      <div class="ask-head">
+        <div class="label">predictive actions</div>
+        <nav class="actions" role="tablist">
+          <button class="action is-on" data-action="price" role="tab" data-tip="Is this asking price fair? Comps, market and model, with a confidence and a route.">Price check</button>
+          <button class="action" data-action="ladder" role="tab" data-tip="Sweep the asking price ±15% and see where the verdict flips.">Price ladder</button>
+          <button class="action" data-action="market" role="tab" data-tip="County conditions: days on market, months of supply, regime and trend.">Market pulse</button>
+          <button class="action" data-action="method" role="tab" data-tip="Ask how any number is computed. Answers are quoted from the method notes with a source.">Ask the method</button>
+        </nav>
+      </div>
+
+      <!-- price check / ladder form -->
+      <form id="form-price" class="form" autocomplete="off">
+        <div class="row">
+          <label class="field grow">
+            <span>Property address <i class="hint" data-tip="Philadelphia city records: street number + name is enough. Try 3358 Livingston St, 720 Shirley St, 1034 Shackamaxon St — or the kit's 123 Oak St.">?</i></span>
+            <input name="address" placeholder="e.g. 720 Shirley St" required>
+          </label>
+          <label class="field">
+            <span>Asking price <i class="hint" data-tip="Optional. Defaults to the last recorded sale price, i.e. 'was this sale fairly priced?'">?</i></span>
+            <input name="price" type="number" min="10000" max="50000000" step="1000" placeholder="499000">
+          </label>
+          <label class="field">
+            <span>Days on market <i class="hint" data-tip="Optional. A listing sitting past 1.5× the county median nudges the verdict toward overpriced.">?</i></span>
+            <input name="dom" type="number" min="0" max="3650" placeholder="40">
+          </label>
+        </div>
+        <div class="row between">
+          <div class="narrator">
+            <span class="label">narrator</span>
+            <label><input type="radio" name="narrator" value="rules" checked> rules <i class="hint" data-tip="Deterministic planner. No model, no key, same answer every time.">?</i></label>
+            <label class="{{ '' if narrator_available else 'dim' }}"><input type="radio" name="narrator" value="claude" {{ '' if narrator_available else 'disabled' }}> claude <i class="hint" data-tip="{{ 'A real model plans and narrates. The verdict is still computed by the engine.' if narrator_available else 'Set ANTHROPIC_API_KEY on the server to enable. The verdict never depends on it.' }}">?</i></label>
+          </div>
+          <div class="examples">
+            <span class="label">try</span>
+            <button type="button" class="ex" data-address="720 Shirley St" data-price="499000" data-dom="40">720 Shirley St @ $499k</button>
+            <button type="button" class="ex" data-address="3358 Livingston St">3358 Livingston St</button>
+            <button type="button" class="ex" data-address="1034 Shackamaxon St">1034 Shackamaxon St</button>
+            <button type="button" class="ex" data-address="123 Oak St">123 Oak St (kit)</button>
+          </div>
+        </div>
+        <div class="row between">
+          <div class="status" id="status" aria-live="polite"></div>
+          <button class="go" type="submit">Run price check</button>
+        </div>
+      </form>
+
+      <!-- market form -->
+      <form id="form-market" class="form" hidden>
+        <div class="row">
+          <label class="field grow">
+            <span>County <i class="hint" data-tip="Thirteen counties in the Bright MLS footprint, from Redfin's monthly county tracker.">?</i></span>
+            <select name="region">
+              {% for r in regions %}<option value="{{ r }}" {{ 'selected' if r == default_region else '' }}>{{ r }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="row between">
+          <div class="status" id="status-market" aria-live="polite"></div>
+          <button class="go" type="submit">Read the market</button>
+        </div>
+      </form>
+
+      <!-- method form -->
+      <form id="form-method" class="form" hidden>
+        <div class="row">
+          <label class="field grow">
+            <span>Question <i class="hint" data-tip="Retrieval over the method notes: pricing method, market indicators, data sources, footprint, glossary.">?</i></span>
+            <input name="question" placeholder="how is confidence computed?" required>
+          </label>
+        </div>
+        <div class="row between">
+          <div class="examples">
+            <span class="label">try</span>
+            <button type="button" class="exq">what does months of supply mean?</button>
+            <button type="button" class="exq">why is price per square foot only a check?</button>
+            <button type="button" class="exq">where does the data come from?</button>
+            <button type="button" class="exq">when is a file routed to an analyst?</button>
+          </div>
+          <button class="go" type="submit">Ask</button>
+        </div>
+        <div class="row"><div class="status" id="status-method" aria-live="polite"></div></div>
+      </form>
+    </div>
+
+    <div id="results" class="results"></div>
+  </section>
+
+  <!-- ============================== right: guidance -->
+  <aside class="col-side">
+    <div class="card">
+      <h3>How to read Delphi</h3>
+      <table class="guide">
+        <tr><th data-tip="One of four words. Never a number without the evidence beneath it.">verdict</th><td><b>fairly priced</b> within the band · <b>overpriced</b> above it · <b>underpriced</b> below it · <b>insufficient data</b> when the evidence is thin</td></tr>
+        <tr><th data-tip="0.30 + 0.25 × evidence volume + 0.30 × agreement between signals + 0.15 × distance from the line.">confidence</th><td>how much evidence, how well it agrees, how far from the line. Below <b>0.55</b> no call is issued.</td></tr>
+        <tr><th data-tip="The human-in-the-loop decision. Low confidence or a critic flag always goes to a person.">route</th><td><b>auto</b> — the numbers stand on their own · <b>analyst</b> — a person reviews with the evidence attached</td></tr>
+        <tr><th data-tip="Closed sales in the same zip with the same bed count in the last 12 months. The median is the anchor.">comps</th><td>median of comparable closed sales; more comps, more weight (saturates at 12)</td></tr>
+        <tr><th data-tip="±5% in a balanced market, ±7% when supply is under 4 months (sellers), ±3% over 6 months (buyers).">band</th><td>the tolerance around the anchor that counts as fair; the market sets its width</td></tr>
+        <tr><th data-tip="A hedonic regression plus a small neural net trained on the same sales, blended in log space. Discounted when they disagree.">model</th><td>a second vote from a statistical model; its weight falls when its two halves disagree or the zip is unfamiliar</td></tr>
+        <tr><th data-tip="Compared against comps of similar size only (0.7×–1.3×). Small homes are expensive per foot for honest reasons.">$/sqft check</th><td>a size sanity check that can lower confidence, never move the price</td></tr>
+        <tr><th data-tip="Median days on market for the county; a listing past 1.5× the median nudges toward overpriced.">dom</th><td>days on market — the market's speed, and a signal about this listing</td></tr>
+        <tr><th data-tip="Inventory divided by monthly sales. Under 4 favours sellers, over 6 favours buyers.">months of supply</th><td>how long the current inventory would take to sell at the current pace</td></tr>
+        <tr><th data-tip="A deterministic second reader: every dollar figure must exist in the evidence, direction must match, no high confidence on thin comps.">critic</th><td>a second pair of eyes on the verdict's story; a flag routes to an analyst</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Trust and risk</h3>
+      <ul class="trust">
+        <li><b>Fair housing.</b> Property and market facts only. No demographic feature or filter anywhere in the pipeline.</li>
+        <li><b>Appraisal independence.</b> Delphi advises a licensed professional. It does not set a price.</li>
+        <li><b>Provenance.</b> Every number traces to a public source with a timestamp and a hash.</li>
+        <li><b>Guardrails.</b> Inputs are bounded, tool output is scanned for instruction-like text before any model reads it, and the answer shape is checked.</li>
+        <li><b>Nothing stored.</b> Requests are not logged to disk here; the trace is returned to you and discarded.</li>
+        <li><b>Deterministic by default.</b> The verdict is code, not a model's opinion. A model, when enabled, only plans and narrates.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Data</h3>
+      <table class="guide small">
+        <tr><th>sales</th><td>City of Philadelphia, Office of Property Assessment — recorded deeds via the public Carto SQL API. Not MLS data: no list prices or listing DOM.</td></tr>
+        <tr><th>market</th><td>Redfin Data Center, county market tracker — 13 Bright-footprint counties, monthly. Data from Redfin.</td></tr>
+        <tr><th>model</th><td>Hedonic ridge + one-hidden-layer MLP on log price, 5-fold validated against scikit-learn and PyTorch.</td></tr>
+      </table>
+    </div>
+  </aside>
+</main>
+
+<footer class="foot">
+  <div class="wrap">Delphi is decision support for licensed real-estate professionals. It never issues a verdict without showing its evidence, and a person makes the final call.</div>
+</footer>
+
+<script src="{{ url_for('static', filename='delphi.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# render blueprint: one free web service running delphi on top of bright-agent.
+# connect the repo in the render dashboard ("new +" -> "blueprint") and it reads this file.
+services:
+  - type: web
+    name: delphi
+    runtime: python
+    plan: free
+    buildCommand: pip install -r delphi/requirements.txt
+    startCommand: gunicorn delphi.app:app --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # optional: set this in the dashboard to enable the "claude" narrator. the verdict never needs it.
+      # - key: ANTHROPIC_API_KEY
+      #   sync: false
