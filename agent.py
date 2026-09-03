@@ -1,31 +1,18 @@
 """
-agent.py - the loop. orchestration only; no data access, no math, no model weights.
+agent.py - the agent loop: it orchestrates, no data access, no math, and no model weight.
 
-CONTRACT (unchanged from the kit)
-  run_agent(client, user_query: str) -> str
-    - history = [{"role": "user", "content": user_query}]
-    - loop:
-        resp = client.create(messages=history, tools=TOOL_SCHEMAS)
-        if resp.stop_reason == "end_turn": return the text
-        else: for each tool_use block ->
-            execute_tool(name, input)
-            append assistant turn (resp.content) to history
-            append user turn of tool_result blocks
-    - hard cap: max 10 iterations (runaway gate)
+the signature run.py depends on:
+run_agent(client, user_query) -> str
+keep the message history; call the model with it; when it requests tool calls,
+execute them, append the model's turn and the tool results, and call again;
+when it answers, return the text; hard stop after ten turns.  
 
-what was added around the contract, in order of appearance:
-  tracer      - every model call and tool call is written to traces/*.jsonl
-  guardrails  - tool output is scanned before the model sees it
-  evidence    - tool results are also kept by name, so the verdict engine can use them
-  verdict     - assess() turns the evidence into a call the model did not have to make
-  critic      - a second pass reads the verdict and flags anything inconsistent
-  gate        - low confidence or a critic flag routes to a human analyst
-
-say it aloud while you type: what, why, which gate.
+around that signature: tracing logs every model call and tool call, guardrails scan tool output
+before the model reads it, results are kept by name as evidence, and after the loop a verdict
+is computed, reviewed by a critic, and routed - auto-cleared or human-in-the-loop to an analyst.
 """
 
 import json
-
 import critic
 import guardrails
 import verdict as verdict_engine
@@ -36,7 +23,7 @@ MAX_TURNS = 10
 
 
 def run(client, user_query, tracer=None, list_price=None, days_on_market=None, trace_dir="traces"):
-    """full run: returns a dict with the answer text, the verdict, the route and the transcript."""
+    """run one question end to end. returns a dict: answer text, verdict, route, evidence, transcript."""
     tracer = tracer or Tracer(trace_dir, enabled=False)
     messages = [{"role": "user", "content": user_query}]
     evidence = {}            # tool name -> last successful result
@@ -48,14 +35,14 @@ def run(client, user_query, tracer=None, list_price=None, days_on_market=None, t
         for turn in range(MAX_TURNS):
             turns = turn + 1
             done = t.timed()
-            response = client.create(messages=messages, tools=TOOL_SCHEMAS)   # whole convo in, one reply out
+            response = client.create(messages=messages, tools=TOOL_SCHEMAS)   # send the full history, get one reply
             t.event("model_call", turn=turns, stop_reason=response.stop_reason, latency_ms=done())
 
             if response.stop_reason == "end_turn":
                 final_text = _text_of(response.content)
                 break
 
-            # tool_use: run every requested tool, then hand all results back in one user turn
+            # the model asked for tools. run each one, collect the results, send them back in one user turn.
             results = []
             for block in response.content:
                 if block.get("type") != "tool_use":
@@ -65,7 +52,7 @@ def run(client, user_query, tracer=None, list_price=None, days_on_market=None, t
                 result = execute_tool(name, tool_input)
                 if name == "lookup_listing" and isinstance(result, dict) and "error" not in result:
                     if list_price is not None:
-                        result["list_price"] = list_price     # "what if we asked X?" - the user's number wins
+                        result["list_price"] = list_price     # caller supplied a hypothetical asking price
                     if days_on_market is not None:
                         result["days_on_market"] = days_on_market
                 result, findings = guardrails.scan_tool_output(result)
@@ -85,7 +72,7 @@ def run(client, user_query, tracer=None, list_price=None, days_on_market=None, t
             final_text = "iteration cap hit - no final answer"
             t.event("guardrail", stage="loop", detail=f"{MAX_TURNS}-turn cap reached")
 
-        # the verdict is ours, computed from evidence, whatever the model said
+        # after the loop: the verdict is computed from the evidence. the model's text is narration, not the decision.
         result = verdict_engine.assess(evidence.get("lookup_listing", {}), comps=evidence.get("comp_stats"),
                                        market=evidence.get("market_context"), model=evidence.get("predict_price"))
         problems = guardrails.check_verdict(result)
@@ -106,24 +93,26 @@ def run(client, user_query, tracer=None, list_price=None, days_on_market=None, t
 
 
 def run_agent(client, user_query):
-    """the kit's contract. run.py calls this and prints the string."""
+    """the signature run.py depends on: question in, answer text out."""
     return run(client, user_query)["answer"]
 
 
-# ---------------------------------------------------------------- helpers
+# --- helpers below:
 
 def _text_of(content):
+    # join the text blocks of a reply; ignore tool_use blocks
     return "\n".join(b.get("text", "") for b in content if b.get("type") == "text").strip()
 
 
 def _summary(result):
-    # keep traces small: comps lists get counted, not copied
+    # comps lists are long; log the count instead of the rows
     if isinstance(result, dict) and "comps" in result:
         r = dict(result); r["comps"] = f"[{len(result['comps'])} rows]"; return r
     return result
 
 
 def compose(model_text, result, route, why, notes=None):
+    """format the final answer: model text, then the verdict with its reasons, the route, one cited note."""
     lines = []
     if model_text:
         lines += [model_text, ""]
