@@ -1,19 +1,24 @@
 """
-evaluate_models.py - k-fold cross-validation, the honest scoreboard.
 
-one held-out split can flatter or embarrass a model by luck. k folds average the
-luck out. every candidate sees the same folds, built from the same feature spec,
-so the comparison is about the model and nothing else:
+evaluate_models.py - k-fold cross-validation across every candidate.
 
-  zip median      - "what did 3-beds in this zip go for?" the broker's back-of-envelope
-  assessor        - the city's own market value, straight from the record
-  ridge (ours)    - closed-form hedonic regression, ml/linear.py
-  mlp (ours)      - one hidden layer, hand-written backprop, ml/mlp_numpy.py
-  sklearn ridge   - the library on the same features: if it disagrees with ours, we have a bug
-  sklearn gbrt    - gradient-boosted trees: the strong tabular baseline to know where the ceiling is
-  torch mlp       - same architecture via autograd, when torch is installed
+ - one held-out split can flatter a model by luck: k folds average the luck out.
+ - every candidate sees the same folds and the same features, so differences come
+   from the model and nothing else. 
+ - candidates: a zip-median baseline, the city assessor's value as-is, my ridge and my
+   numpy net, scikit-learn's ridge and gradient boosting, and the pytorch net when torch 
+   is installed. Here is more:
+
+      zip median      - "what did 3-beds in this zip go for?" the broker's back-of-envelope
+      assessor        - the city's own market value, straight from the record
+      ridge (ours)    - closed-form hedonic regression, ml/linear.py
+      mlp (ours)      - one hidden layer, hand-written backprop, ml/mlp_numpy.py
+      sklearn ridge   - the library on the same features: if it disagrees with ours, we have a bug
+      sklearn gbrt    - gradient-boosted trees: the strong tabular baseline to know where the ceiling is
+      torch mlp       - same architecture via autograd, when torch is installed
 
     python -m ml.evaluate_models --folds 5
+      
 """
 
 import argparse

@@ -1,12 +1,15 @@
 """
-linear.py - ridge regression in closed form. the statistical layer.
+linear.py - ridge regression, solved in closed form.
 
-    minimise  ||Xw - y||^2 + lam * ||w||^2
-    solution  w = (X'X + lam I)^-1 X'y
+least squar with a penalty on large weights.
 
-we solve the linear system instead of inverting the matrix - same answer,
-better numerics, and it is the idiom you want to show on a whiteboard.
-the intercept rides along as a column of ones and is not penalised.
+    (X'X + lam*I) w = X'y
+
+the solution comes from the normal equations, and the code solves the linear system
+rather than inverting the matrix - same answer, better numerics.
+
+the intercept is a column of ones and is not penalized.
+
 """
 
 import numpy as np
@@ -31,7 +34,7 @@ class Ridge:
         return Xb @ self.w
 
     def coef_table(self, names, top=12):
-        # the part a stakeholder wants: which attributes move price and by how much (in log units)
+        # largest coefficients first: which attributes move price, in log units
         pairs = sorted(zip(names, self.w[:-1]), key=lambda p: -abs(p[1]))
         return pairs[:top]
 
@@ -40,7 +43,9 @@ class Ridge:
 
     @classmethod
     def from_dict(cls, d):
-        m = cls(d["lam"]); m.w = np.array(d["w"]); return m
+        m = cls(d["lam"])
+        m.w = np.array(d["w"])
+        return m
 
 
 def r2(y, yhat):

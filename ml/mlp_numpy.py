@@ -1,17 +1,17 @@
 """
-mlp_numpy.py - a one-hidden-layer network with the gradients written out by hand.
+mlp_numpy.py - a one-hidden layer network with the gradients written by hand.
 
-    forward:  z1 = X W1 + b1      a1 = tanh(z1)      yhat = a1 W2 + b2
-    loss:     L  = mean((yhat - y)^2) + wd * (|W1|^2 + |W2|^2)
-    backward: chain rule, one line per arrow, read bottom to top
+    forward: z1 = X W1 + b1, a1 = tanh(z1), yhat = a1 W2 + b2
+    loss: mean squared error plus a small penalty on the weights
+    backward: chain rule applied layer by layer
+    
+    ReLU: max(0,x). Negative inputs output zero; positives pass through.
 
-why tanh: bounded, smooth, zero-centred; on 2k rows relu tends to leave dead
-units and the extra expressiveness buys nothing. why one hidden layer: the
-universal approximation result says width is enough, and depth is the thing
-that needs lots of data. this is the smallest net that can bend the hedonic
-line - which is all we are asking it to do.
+ - why tanh: bounded and zero-centered; relu left dead units on this little data. 
+ - why one hidden layer: enough to bend teh linear fit, and depth needs more rows
+   than two thousand. the optimizer is adam, also written out, and gradient_check
+   at the bottom verifies the backward pass against finite differences.
 
-the optimiser is adam, written out too (m and v running moments, bias-corrected).
 """
 
 import numpy as np
@@ -20,7 +20,7 @@ import numpy as np
 class MLP:
     def __init__(self, n_in, n_hidden=32, seed=0):
         rng = np.random.default_rng(seed)
-        # glorot-ish scale: keeps tanh in its linear-ish regime at init
+        # glorot-style init keeps tanh away from its flat regions at the start
         self.W1 = rng.normal(0, np.sqrt(2.0 / (n_in + n_hidden)), (n_in, n_hidden))
         self.b1 = np.zeros(n_hidden)
         self.W2 = rng.normal(0, np.sqrt(2.0 / (n_hidden + 1)), (n_hidden, 1))
@@ -28,7 +28,7 @@ class MLP:
         self.y_mean, self.y_std = 0.0, 1.0   # we standardise the target too
         self.history = []
 
-    # ---- the two directions
+    # the two directions
     def forward(self, X):
         z1 = X @ self.W1 + self.b1
         a1 = np.tanh(z1)
@@ -51,7 +51,7 @@ class MLP:
         mse = float(((yhat - y) ** 2).mean())
         return mse + wd * (float((self.W1 ** 2).sum()) + float((self.W2 ** 2).sum()))
 
-    # ---- training
+    # training
     def fit(self, X, y, X_val=None, y_val=None, epochs=300, lr=3e-3, batch=64, wd=1e-4,
             patience=30, seed=0, verbose=False):
         rng = np.random.default_rng(seed)
@@ -99,7 +99,7 @@ class MLP:
         yhat, _ = self.forward(X)
         return yhat * self.y_std + self.y_mean
 
-    # ---- persistence
+    # persistence
     def to_dict(self):
         return {"W1": self.W1.tolist(), "b1": self.b1.tolist(), "W2": self.W2.tolist(), "b2": self.b2.tolist(),
                 "y_mean": self.y_mean, "y_std": self.y_std}
@@ -115,12 +115,13 @@ class MLP:
 
 def gradient_check(n=5, d=4, h=3, eps=1e-6, seed=1):
     """
-    finite differences vs the analytic gradient. if this passes, the backward
-    pass is right - it is the unit test every hand-written network deserves.
-    returns the largest relative error over a handful of weights.
+    compare the analytic gradient against finite differences on a few weights.
+    retunrs the largest relative error - if it is tiny, the backward pass is right.
+
     """
     rng = np.random.default_rng(seed)
-    X = rng.normal(size=(n, d)); y = rng.normal(size=n)
+    X = rng.normal(size=(n, d))
+    y = rng.normal(size=n)
     net = MLP(d, h, seed=seed)
     yhat, a1 = net.forward(X)
     dW1, db1, dW2, db2 = net.backward(X, a1, yhat, y, wd=0.0)

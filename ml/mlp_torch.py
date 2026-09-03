@@ -1,14 +1,17 @@
 """
-mlp_torch.py - the same one-hidden-layer network, written with autograd.
 
-read this next to mlp_numpy.py. every line here has a twin there:
-  nn.Linear(n_in, h) + tanh + nn.Linear(h, 1)   <->   W1, b1, tanh, W2, b2
-  loss.backward()                                <->   backward() by hand
-  torch.optim.Adam(...).step()                   <->   the m / v moment updates
+mlp_torch.py - the same one-hidden layer network, written with pytorch.
 
-the point of the pair: the framework is a convenience, not a source of truth.
-if the two disagree on the same data, the bug is yours, and you can find it.
+read it next to mlp_numpy.py; the pieces map one to one:
+    nn.Linear(n_in, h)  + tanh + nn.Linear(h,1)     <->  W1, b1, tanh, W2, b2
+    loss.backward()                                 <-> backward() by hand
+    torch.optim.Adam(...).step()                    <-> the m and v moment updates
+
+the pair exists as a cross-check: both nets on the same data should land in the 
+same place, and when they do the hand-written gradients are confirmed.
+
 torch is optional - nothing else in the repo imports this file.
+
 """
 
 import numpy as np
@@ -46,7 +49,7 @@ class TorchMLP:
             for idx in torch.randperm(len(Xt), generator=gen).split(batch):
                 opt.zero_grad()
                 loss = loss_fn(self.net(Xt[idx]), yt[idx])
-                loss.backward()      # <- the whole of mlp_numpy.backward(), in one call
+                loss.backward()      # autograd does here waht mlp_numpy.backward() does by hand
                 opt.step()
             self.net.eval()
             with torch.no_grad():

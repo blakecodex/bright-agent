@@ -1,9 +1,10 @@
 """
-predict.py - the inference side. loads model.json once and answers
-"what should this property sell for?" with two numbers and a disagreement.
 
-kept separate from train.py so the agent imports nothing that touches the
-training loop. this is the file that would ship to the endpoint.
+predict.py - the inference side: load model.json once and answers.
+"what should this property sell for?" with two estimates and their spread.
+
+kept separate from train.py so serving never imports the training loop.
+
 """
 
 import json

@@ -1,12 +1,16 @@
 """
-train.py - fit the statistical layer (ridge) and the hidden layer (mlp) on the
+
+train.py - fit the statistical layer (ridge) and the hidden layer (mlp) on the 
 sales in the store, then freeze both into ml/artifacts/model.json.
 
     python -m ml.train
 
-the split is by parcel hash, not random: the same house sold twice should not
-sit on both sides of the line. the two models see identical features so their
-disagreement is informative - when they diverge the verdict lowers its confidence.
+the split hashes the parcel id, not a random draw, so the same house sold twice
+never shows in both the training and the test data.
+
+both models see identical featurees, which makes their disagreement meaningful - 
+the verdict lowers confidence when they diverge.
+
 """
 
 import hashlib

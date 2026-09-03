@@ -1,10 +1,12 @@
 """
-features.py - turn a property record into a numeric vector. the hedonic idea:
-a house is a bundle of attributes, and price is (roughly) additive in the logs.
 
-one FeatureSpec is fitted on the training rows (zip vocabulary, scaler means and
-stds, imputation medians) and then frozen. train and predict must build vectors
-the same way or the weights mean nothing - so both call spec.transform.
+features.py - turn a property record into a numeric vector.
+
+ - the hedonic idea: a house is a bundle of attributes, and log price is
+   roughly additive in them; one FeatureSpec is fitted on the training rows (imputation
+   medians, zip vocabulatory, scaler) and frozen;
+   - training and predictions both call spec. transform, so vectors are always built the same way.
+
 """
 
 import math
@@ -41,7 +43,7 @@ class FeatureSpec:
 
     NUMERIC = ["log_sqft", "beds", "baths", "age", "log_lot", "stories", "ext_cond", "quality", "garage",
                "fireplaces", "central_air", "air_missing", "is_mf", "beds_missing", "log_assessed", "assessed_missing"]
-    # log_assessed is the city's own valuation. it is public for every parcel before a listing goes
+    # log_assessed is the city's own valuation - public before any listing exists, so usable at prediction time
     # live, so it is fair game as a feature - an avm that ignores the assessor is leaving money on the table.
 
     def __init__(self, min_zip_count=15, hidden_target=None):
@@ -56,7 +58,7 @@ class FeatureSpec:
         # a fitted median when we have one, else a sensible philadelphia default
         return self.medians.get(key) or default
 
-    # ---- record -> raw dict of numbers (before scaling)
+    # one record to a dict of plain numbers, before scaling
     def raw(self, rec):
         sqft = _num(rec.get("sqft"), None)
         beds = _num(rec.get("beds"), None)
@@ -129,7 +131,7 @@ class FeatureSpec:
         X = self._matrix(rows)
         return (X - self.mean) / self.std
 
-    # ---- json round trip
+    # save and load as plain json
     def to_dict(self):
         return {"min_zip_count": self.min_zip_count, "zips": self.zips, "medians": self.medians,
                 "mean": self.mean.tolist(), "std": self.std.tolist(), "names": self.names}
@@ -137,8 +139,11 @@ class FeatureSpec:
     @classmethod
     def from_dict(cls, d):
         spec = cls(d["min_zip_count"])
-        spec.zips = d["zips"]; spec.medians = d["medians"]; spec.names = d["names"]
-        spec.mean = np.array(d["mean"]); spec.std = np.array(d["std"])
+        spec.zips = d["zips"] 
+        spec.medians = d["medians"]
+        spec.names = d["names"]
+        spec.mean = np.array(d["mean"])
+        spec.std = np.array(d["std"])
         return spec
 
 
