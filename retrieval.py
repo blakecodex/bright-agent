@@ -1,13 +1,13 @@
 """
-retrieval.py - tf-idf over the notes/ folder. the rag seam, in ninety lines of stdlib.
+retrieval.py - keyword serach over the notes/ folder; how the assistant cites its method.
 
-a vector database does three things: turn text into vectors, store them, find the
-nearest ones to a query. here the vectors are tf-idf, the store is a dict, and the
-search is cosine similarity over a few hundred paragraphs. swap embed() for a
-sentence-embedding call and the store for pinecone/qdrant/pgvector and nothing
-above this file changes - the tool still returns "top k passages with sources".
+same shape as a vector db: turn text into vectors -> store them -> return the nearest ones to a query.
+
+here the vectors are tf-idf weights and similarity is the cosine, which is plenty for a few hundred paragraphs.
+swapping embed() for an embedding model and the dict for a vector store changes nothing above this file.
 
     python retrieval.py "what does months of supply mean"
+
 """
 
 import glob
