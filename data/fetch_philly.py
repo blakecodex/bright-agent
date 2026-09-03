@@ -1,19 +1,13 @@
 """
-fetch_philly.py - pull recorded sales from the city of philadelphia's open data
-(the opa property assessment table) through its public carto sql api. stdlib only.
 
-why this source: it is keyless, it is sql on the wire (you literally send a
-select statement), it updates as deeds are recorded, and philadelphia sits
-inside the bright mls footprint. it is not an mls feed - there are no list
-prices or days on market - but it is real closed-sale ground truth, which is
-exactly what a comp is.
+fetch_philly.py - pull recorded sales from Philly's open-data api.
+    - the endpoint takes a sql query over http and returns csv, no key needed.
+    - not mls data - no asking prices or days on market - but real closed sales,
+      which is what a comp is; pages land in cache/ as gzipped csv with a cheksum each.
 
-    python -m data.fetch_philly                     # last 12 months, 500 rows per page
-    python -m data.fetch_philly --since 2024-01-01  # deeper history (~40k rows)
+      python -m data.fetch_philly                       # last 12 months, 500 rows per page
+      python -m data.fetch_philly --since 2024-01-01    # deeper history
 
-each page lands in cache/ as philly_sales_pNNN.csv.gz. store.build() reads
-whatever pages exist. the committed snapshot in cache/ was pulled with this
-exact query on 2026-09-01; run this to refresh it.
 """
 
 import argparse

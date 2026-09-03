@@ -1,17 +1,12 @@
 """
-fetch_redfin.py - stream redfin's county market tracker and keep the bright-mls
-footprint counties. stdlib only, and it never holds the file in memory.
 
-redfin publishes the whole country as one gzipped tsv (~240 mb compressed,
-~700 mb inflated). we open the http response, wrap it in a gzip reader, and walk
-it line by line - decompress, test, keep or drop. that is the streaming idea in
-its simplest form: constant memory regardless of file size.
+fetch_redfin.py - stream redfin's national county file and keep 13 counties in bright's footprint.
 
-    python -m data.fetch_redfin              # ~2-4 minutes on a home connection
-    python -m data.fetch_redfin --since 2022-01-01
+ - the file is 240 mb compressed, so it is read line by line off the wire and never
+   held in memory or written whole to disk.
 
-output: cache/redfin_county_tracker.tsv.gz with the columns store.py expects.
-the committed snapshot was produced by this filter on 2026-09-01.
+   python -m data.fatch_redfin
+
 """
 
 import argparse

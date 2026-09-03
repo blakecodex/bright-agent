@@ -1,10 +1,11 @@
 """
 mock_client.py — deterministic fake LLM. Cannot reason. Scripted turns only.
-Mirrors the Anthropic response shape loosely:
-  response.content    -> list of blocks: {"type": "text"|"tool_use", ...}
-  response.stop_reason -> "tool_use" | "end_turn"
 
-YOUR LOOP must:
+Mirrors the Anthropic response shape loosely:
+  - response.content    -> list of blocks: {"type": "text"|"tool_use", ...}
+  - response.stop_reason -> "tool_use" | "end_turn"
+
+the loop must:
   1. call client.create(messages=history)
   2. if stop_reason == "tool_use": execute each tool_use block,
      append assistant turn + tool_result turn to history, repeat
@@ -79,10 +80,10 @@ class MockClient:
             if not ok:
                 raise ValueError(
                     "History malformed: expected a user turn of tool_result blocks "
-                    "after tool_use. Check how you append to messages."
+                    "after tool_use. Check how the loop appends to messages."
                 )
         if self._turn >= len(self._script):
-            raise RuntimeError("Script exhausted — your stop condition failed.")
+            raise RuntimeError("Script exhausted — the stop condition failed.")
         resp = self._script[self._turn]
         self._turn += 1
         return resp
@@ -90,7 +91,7 @@ class MockClient:
 
 class MalformedMockClient(MockClient):
     """Rep-3 variant: second turn requests a tool that DOES NOT EXIST
-    and omits a required param. Your loop must survive: return an error
+    and omits a required param. the loop must survive: return an error
     string as the tool_result, keep the loop alive, reach end_turn.
     """
 
@@ -102,7 +103,7 @@ class MalformedMockClient(MockClient):
                 {
                     "type": "tool_use",
                     "id": "tu_2",
-                    "name": "flood_risk",  # not in your registry
+                    "name": "flood_risk",  # not in the registry
                     "input": {},  # missing params too
                 },
             ],

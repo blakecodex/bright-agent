@@ -6,7 +6,7 @@
 
 - **Today - The Challenge** - Complete a comparative market analysis (CMA) by hand: pull comps, adjust for differences, and write up the number. The goal is to submit a price the seller accepts AND the market supports.  
 
-- **What I built** - An assistant tha builds the analysis, balances speed with precision, and shows its work: 
+- **What I built** - An assistant that builds the analysis, balances speed with precision, and shows its work: 
     + comparable sales
     + a market read
     + a model estimate
@@ -69,7 +69,7 @@ Below it, five tools do the actual work against sqlite, the trained moels and th
  ## The data
 
  Two public sources, no keys, both re-pullable with one command ('python bright.py fetch'):
- - **City of Philadelphia sales** - recorded deeds from the assessor's open-data API. You literally send a SQL query over the web; 2,000 sales are cached in the repo with a checksum ( aka fingerprint of a file; proves teh cached data wasn't altered). Ground truth for comps and for training.  
+ - **City of Philadelphia sales** - recorded deeds from the assessor's open-data API. the endpoint takes a plain sql query over the web; 2,000 sales are cached in the repo with a checksum ( aka fingerprint of a file; proves the cached data wasn't altered). Ground truth for comps and for training.  
  - **Redfin county market tracker** - one big national file, streamed line by line; I keep 13 Bright-footprint counties. Days on market, months of supply - together a simplified read on the market's pulse.
 
 Limitation: this is deed and county data, not MLS data. There are no list prices or days on market per listing, so those are inputs ('--price', '--dom'). In production that gap is one join to a live listing table.
