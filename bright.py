@@ -1,18 +1,19 @@
 """
-bright.py - the front door for everything that is not the kit's run.py.
+
+bright.py - the command line for everything beyond the two scripted runs.
 
     python bright.py ask "Is 3358 Livingston St fairly priced?"
-    python bright.py ask "Is 720 Shirley St fairly priced?" --price 499000 --dom 40
+    python bright.py ask "Is 720 Shirley St fairly priced?" -- price 499000 --dom
     python bright.py ask "Is 123 Oak St listed at a fair price?" --client mock
     python bright.py eval                # scenario harness, prints the scorecard
     python bright.py train               # refit ridge + mlp, write ml/artifacts/model.json
     python bright.py evaluate            # k-fold comparison incl. sklearn / torch cross-checks
     python bright.py fetch [--since ..]  # refresh data/cache from the live apis
     python bright.py db                  # rebuild the sqlite file from cache
-    python bright.py trace <file>        # pretty-print one trace
+    python bright.py trace <file>        # print one run log
     python bright.py notes "months of supply"
-
-one file, one argparse, subcommands that call into the modules. no framework.
+    
+each subcommand is a thin wrapper around one module.
 """
 
 import argparse
@@ -111,8 +112,12 @@ def main(argv=None):
     p.add_argument("--skip-redfin", action="store_true")
     p.set_defaults(fn=cmd_fetch)
     sub.add_parser("db", help="rebuild sqlite from cache").set_defaults(fn=cmd_db)
-    p = sub.add_parser("trace", help="print a trace file"); p.add_argument("path"); p.set_defaults(fn=cmd_trace)
-    p = sub.add_parser("notes", help="search the method notes"); p.add_argument("query"); p.add_argument("-k", type=int, default=3)
+    p = sub.add_parser("trace", help="print a trace file")
+    p.add_argument("path")
+    p.set_defaults(fn=cmd_trace)
+    p = sub.add_parser("notes", help="search the method notes")
+    p.add_argument("query") 
+    p.add_argument("-k", type=int, default=3)
     p.set_defaults(fn=cmd_notes)
 
     args = ap.parse_args(argv)

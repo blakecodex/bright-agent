@@ -1,16 +1,16 @@
 """
-store.py - the local warehouse. sqlite, stdlib only.
+store.py - the local warehouse; sqlite, stdlib only.
 
+two tables:
+    - sales     - one row per recorded sale (Philly opa, ia the carto sql api)
+    - market    - one row per county, month, and property type from redfin's tracker
 two tables:
   sales   - one row per recorded sale (philadelphia opa, via the carto sql api)
   market  - one row per (county, month, property_type) from redfin's market tracker
 
-the agent's tools never touch csv files. they ask this module, and this module
-speaks sql. that is the separation: tools decide *what* to ask, store decides
-*how* to get it.
-
-the cache/ folder holds gzipped pages exactly as the fetchers write them, so
-"load from cache" and "load from a fresh pull" are the same code path.
+tools never read csv files directly; they call this module and this module speaks sql.
+the cache/ folder holds the gzipped pages exactly as the fetchers wrote them, so loading
+from cache and loading from a fresh pull is one code path.
 """
 
 import csv
@@ -24,7 +24,7 @@ CACHE_DIR = os.path.join(HERE, "cache")
 DB_PATH = os.path.join(CACHE_DIR, "bright.db")
 
 # columns we keep from the opa extract, in the order the csv pages carry them.
-# types matter for the math later: sqlite is loose, we are not.
+# types matter for the mat later, so they're declared here.
 SALES_COLUMNS = [
     ("parcel", "TEXT"), ("zip", "TEXT"), ("cat", "TEXT"), ("building", "TEXT"),
     ("beds", "INTEGER"), ("baths", "INTEGER"), ("sqft", "INTEGER"), ("lot_sqft", "INTEGER"),
@@ -44,7 +44,7 @@ MARKET_COLUMNS = [
 
 
 def _coerce(value, sqltype):
-    # empty string means "the city didn't record it". null, not zero. zero is a claim.
+    # empty string means the city didn't record it; store null, never zero.
     if value is None or value == "":
         return None
     try:
@@ -133,7 +133,7 @@ def ensure_db(db_path=DB_PATH):
     return con
 
 
-# ---------------------------------------------------------------- queries
+# queries below:
 
 def find_property(address, con=None):
     """exact-ish address match. opa addresses are upper-case with no punctuation."""
@@ -155,10 +155,10 @@ def find_property(address, con=None):
 def comps(zip_code, beds, months=12, as_of=None, sqft=None, con=None):
     """
     comparable sales: same zip, same bed count, sold within the window.
-    returns the list of comps plus the stats the verdict needs. the median is
-    computed in sql with a window function, the way you would on redshift.
-    if the subject's sqft is known, $/sqft is also computed over size-similar
-    comps only (0.7x-1.3x), because small homes carry a higher $/sqft by nature.
+        - returns the list of comps plus the stats the verdict needs 
+        - the median is computed in sql with a window function
+        - same idiom postgres and redshift use
+        - because small homes carry a higher $/sqft by nature.
     """
     con = con or ensure_db()
     as_of = as_of or con.execute("SELECT max(sale_date) FROM sales").fetchone()[0]
@@ -177,7 +177,7 @@ def comps(zip_code, beds, months=12, as_of=None, sqft=None, con=None):
         params,
     ).fetchall()
 
-    # median via row_number over the sorted prices: works for odd and even n,
+    # median via row_number: middle row when odd, average of teh two middles when even
     # and it is the same idiom redshift/postgres people reach for.
     stats = con.execute(
         """
@@ -211,7 +211,7 @@ def comps(zip_code, beds, months=12, as_of=None, sqft=None, con=None):
         "median_ppsf": None,
         "comps": [dict(r) for r in rows],
     }
-    # ppsf medians in python: a second sort, and the list is already in hand
+    # ppsf medians in python, the list is already in memory
     out["median_ppsf"] = _median([r["ppsf"] for r in rows if r["ppsf"]])
     if sqft:
         similar = [r["ppsf"] for r in rows if r["ppsf"] and 0.7 * sqft <= (r["sqft"] or 0) <= 1.3 * sqft]

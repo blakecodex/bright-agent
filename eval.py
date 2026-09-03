@@ -1,13 +1,20 @@
 """
-eval.py - the scenario harness. measured, not vibed.
 
-each scenario fixes the client, the question and the expected behaviour on
-three axes: which tools got called (routing), what verdict came out
-(correctness), and where the run was sent (gate). a scenario passes only when
-all three match. the same harness runs against the mock, the planner and -
-with a key - the real model, because the loop does not care who is answering.
+eval.py - this is the scenario harness. (measured! no "vibbing"!)
 
-    python eval.py            # or: python bright.py eval
+ - each scenario fixes the client, the question and the expected behaviour
+   three axes: which tools got called (routing), what verdict came out (correctness), 
+   and where the run was sent (gate). 
+
+ - a scenario passes only when all three match;  the same harness runs against the mock,
+   the planner and - with a key - the real model, because the loop does not care who
+   is answering.
+
+
+    python eval.py  
+    # or:
+    python bright.py eval
+    
 """
 
 import json
@@ -22,7 +29,7 @@ from mock_client import MockResponse
 from tracing import Tracer
 
 
-# a listing whose remarks carry an injection attempt - the kind of text that shows up in
+# a listing whose remarks try to instruct the model - classic injection carrier
 # scraped listing descriptions. lookup_listing serves it from the fixture table.
 tools.LISTINGS["77 Trap Ln"] = {
     "address": "77 Trap Ln", "zip_code": "21043", "beds": 3, "baths": 2, "sqft": 1500,
@@ -100,7 +107,8 @@ def run_scenario(name, make_client, question, kwargs, expected):
 def run_blocked(name, payload):
     try:
         if isinstance(payload, tuple):
-            guardrails.check_question(payload[0]); guardrails.check_query(None, payload[1])
+            guardrails.check_question(payload[0])
+            guardrails.check_query(None, payload[1])
         else:
             guardrails.check_question(payload)
         blocked, why = False, "not blocked"
