@@ -1,18 +1,24 @@
 """
-tracing.py - a jsonl tracer. one line per event, one file per run.
+tracing.py - the run log. one json line per event, one file per run.
 
-(not trace.py: that name shadows a stdlib module, and `python -m trace` would run the wrong thing.)
+ - named tracing, not trace, because python already has a trace module.
 
-this is the part of langsmith / langfuse / arize that matters when you are
-debugging a loop at 2am: what did the model say, what tool ran, with what input,
-how long did it take, what came back, and where did the run stop. everything
-else those products add (dashboards, scoring, replays) sits on top of exactly
-this record - which is why we write it in a shape they can ingest.
+ - each run records: 
+        - the question 
+        - every model call with its stop reason and timing
+        - every tool call with input
+        - output and errors
+        - anything a guardrail cut
+        - the critic's flags
+        - and where teh run was routed
+
+
+observability tools like langsmith ingest exactly this shape, so exploring later should be straightforward.
 
     with Tracer("traces") as t:
         t.event("model_call", turn=1, stop_reason="tool_use", latency_ms=12)
 
-    python bright.py trace traces/<run>.jsonl   # human-readable summary
+    python bright.py trace traces/<run>.jsonl # readable summary
 """
 
 import json
@@ -53,7 +59,7 @@ class Tracer:
             self._fh.flush()
         return rec
 
-    # small conveniences the loop uses
+
     def timed(self):
         """returns a closure that reports elapsed milliseconds - `done = t.timed(); ...; done()`"""
         start = time.time()
@@ -70,7 +76,7 @@ def _shrink(fields, limit=600):
 
 
 def summarize(path):
-    """print a compact table for one run - the thing you paste into an incident note."""
+    """print a readable timeline for one run file."""
     rows = [json.loads(ln) for ln in open(path, encoding="utf-8") if ln.strip()]
     t0 = rows[0]["ts"] if rows else 0
     print(f"run {rows[0]['run_id']}  events {len(rows)}  file {os.path.basename(path)}")
