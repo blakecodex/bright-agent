@@ -4,3 +4,4 @@ traces/*.jsonl
 traces/eval_latest.json
 data/cache/bright.db
 .env
+DRILL.md

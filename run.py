@@ -1,4 +1,4 @@
-"""run.py — do not edit. Runs your agent against the mocks."""
+"""run.py — nb: DO NOT EDIT. runs agent against the mocks."""
 import sys
 
 from mock_client import MockClient, MalformedMockClient
