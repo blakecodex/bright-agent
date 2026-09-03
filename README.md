@@ -61,7 +61,7 @@ flowchart LR
     L -. every event .-> X["tracing (jsonl)"]
 ```
 
-Three layers - above the loop sits the things that decie the next move: the mock, a rule-based planner, or the real model; the loop cannot tell them apart. The loop itself only keeps the transcript, runs the requested tools, and logs every step.   
+Three layers - above the loop sits the things that decide the next move: the mock, a rule-based planner, or the real model; the loop cannot tell them apart. The loop itself only keeps the transcript, runs the requested tools, and logs every step.   
    
 Below it, five tools do the actual work against sqlite, the trained models and the method notes. When the loop ends, the verdict is computed from the evidence the tools returned - the model narrates - it doesn't decide - then checked, read by the critic, and routed to auto or to a human analyst   
 
