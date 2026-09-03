@@ -1,21 +1,20 @@
 """
-tools.py - tool schemas + tool bodies. the only place the agent touches data or models.
+tools.py - the five things the assistant can do; the only file touching the data or the models.
 
-the contract with the loop is small on purpose:
-  TOOL_SCHEMAS  - what the model is told it can call (json schema, anthropic shape)
-  execute_tool  - the single gate: name + input in, dict out, never an exception
+two pieces the loop relies on:
+- TOOLS_SCHEMAS     - the tool definitions the model sees (json schema)
+- execute_tool      - one dispatch function: name and inputs go in, a dict comes out, and a failure comes back
+                      as an error dict, never as an exception.
 
-everything below the gate is ordinary python a data scientist would write:
-look a property up, pull comps, read the market, ask the model for a price.
+below that: look up a property, pull comps, read the market, 
+search the notes, ask the price models for an estimate.
 """
 
 import retrieval
 from data import store
 from ml import predict as ml_predict
 
-# ------------------------------------------------------------- fixtures
-# the kit's demo listing lives on. the mock client asks for 123 oak st in 21043
-# (ellicott city, md - also bright country) and we still answer it, from these.
+# demo listing the mock client's script asks about (123 oak st, ellicott city md)
 LISTINGS = {
     "123 Oak St": {
         "address": "123 Oak St",
@@ -34,12 +33,12 @@ RECENT_SALES = [
     {"zip_code": "21043", "beds": 3, "sale_price": 407_000},
     {"zip_code": "21043", "beds": 3, "sale_price": 389_500},
     {"zip_code": "21043", "beds": 3, "sale_price": 421_000},
-    {"zip_code": "21043", "beds": 4, "sale_price": 502_000},  # filtered out by beds
+    {"zip_code": "21043", "beds": 4, "sale_price": 502_000},  # wrong bed count, gets filtered
 ]
 
 
 def median(values):
-    """median by hand: sort, split odd/even. no numpy, no statistics module - on purpose."""
+    """sort, take the middle; average the two middles when even."""
     values = sorted(values)
     n = len(values)
     if n == 0:
@@ -50,7 +49,7 @@ def median(values):
     return (values[mid - 1] + values[mid]) / 2
 
 
-# ------------------------------------------------------------- schemas
+# what the model is told it can call
 TOOL_SCHEMAS = [
     {
         "name": "lookup_listing",
@@ -110,18 +109,16 @@ TOOL_SCHEMAS = [
 ]
 
 
-# ------------------------------------------------------------- bodies
-
 def lookup_listing(address: str) -> dict:
-    # real records first, fixture second, error last. the error is data, not an exception.
+    # demo listing first, then the real store, then an error dict
     rec = LISTINGS.get(address)
     if rec is not None:
         return dict(rec)
     row = store.find_property(address)
     if row is None:
         return {"error": f"no property record found for {address!r}"}
-    # a recorded sale is not a listing: there is no asking price or dom. we surface the
-    # last sale as the price on the table and let the caller override it.
+    # deed records have no asking price or days on market. use the last sale price
+    # as the price in question; the caller can override both.
     return {
         "address": row["address"],
         "zip_code": row["zip"],
@@ -138,8 +135,8 @@ def lookup_listing(address: str) -> dict:
         "last_sale_date": row["sale_date"],
         "last_sale_price": row["sale_price"],
         "assessed_value": row["market_value"],
-        "list_price": row["sale_price"],   # default question: was this sale fairly priced?
-        "days_on_market": None,            # not in public deed records
+        "list_price": row["sale_price"],
+        "days_on_market": None,
         "lat": row["lat"],
         "lng": row["lng"],
         "source": "philadelphia opa via carto sql api",
@@ -151,12 +148,11 @@ def comp_stats(zip_code: str, beds: int, months: int = 12, sqft: int = None) -> 
     beds = int(beds)
     real = store.comps(zip_code, beds, months=months, sqft=sqft)
     if real["comp_count"] > 0:
-        # trim the comp list for the transcript; the stats are what the verdict uses
-        real["comps"] = real["comps"][:8]
+        real["comps"] = real["comps"][:8]  # keep the transcript small, stats carry the verdict
         real["source"] = "philadelphia opa sales"
         return real
 
-    # fixture path: same zip + beds filter, empty guard, median by hand
+    # fall back to the demo sales
     prices = [s["sale_price"] for s in RECENT_SALES if s["zip_code"] == zip_code and s["beds"] == beds]
     if not prices:
         return {"error": f"no comps found for zip {zip_code} with {beds} beds"}
@@ -166,7 +162,7 @@ def comp_stats(zip_code: str, beds: int, months: int = 12, sqft: int = None) -> 
         "comp_count": len(prices),
         "median_sale_price": median(prices),
         "median_ppsf": None,
-        "window_months": 3,   # the kit's story says "last 90 days"
+        "window_months": 3,  # the demo sales are a 90-day window
         "source": "fixture",
     }
 
@@ -193,8 +189,7 @@ TOOL_REGISTRY = {
 
 
 def execute_tool(name: str, tool_input: dict) -> dict:
-    """single gate for all tool calls. unknown tool or bad input must NOT crash the
-    agent - return an error dict instead. the loop hands it back to the model as data."""
+    """dispatch one tool call. anything wrong comes back as an error dict, never an exception."""
     fn = TOOL_REGISTRY.get(name)
     if fn is None:
         return {"error": f"unknown tool {name!r}"}
@@ -209,8 +204,9 @@ def execute_tool(name: str, tool_input: dict) -> dict:
 
 
 if __name__ == "__main__":
-    print(execute_tool("comp_stats", {"zip_code": "21043", "beds": 3}))          # fixture -> 402500.0, n=4
-    print(execute_tool("lookup_listing", {"address": "3358 Livingston St"}))     # real record
+    # quick smoke checks
+    print(execute_tool("comp_stats", {"zip_code": "21043", "beds": 3}))
+    print(execute_tool("lookup_listing", {"address": "3358 Livingston St"}))
     print({k: v for k, v in execute_tool("comp_stats", {"zip_code": "19134", "beds": 3}).items() if k != "comps"})
     print(execute_tool("market_context", {}))
-    print(execute_tool("flood_risk", {}))                                          # error as data
+    print(execute_tool("flood_risk", {}))  # unknown tool, comes back as an error
