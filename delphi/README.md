@@ -59,7 +59,7 @@ delphi/
 render.yaml                at the repo root: the blueprint render reads
 ```
 
-## Limits, stated
+## Limitations
 
 - City deed records, not MLS: no list prices or listing days on market. The form's asking price and dom are the seam.
 - 2,000 sales in the cache; the models and comps are honest about that in their confidence. `python bright.py fetch` pulls the full window.
