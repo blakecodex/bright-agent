@@ -147,7 +147,7 @@ Twelve scripted scenarios, each scored three ways:
 
 1. This is deed and county data, not MLS data - no list prices or days on market per listing, so those come in as inputs. 
 
-2. Two thousand sales is enough to prove teh pipeline, not to ship the model; one command pulls the full year. 
+2. Two thousand sales is enough to prove the pipeline, not to ship the model; one command pulls the full year. 
 
 3. The rule-based planner cannot reason; the real-model adapter exists and is small. 
 
