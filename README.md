@@ -1,6 +1,6 @@
 # bright-agent
 
-## Problem Framing - I ran this like a sprint, one user, one job, and a definition of "done":  
+### Problem Framing -- I ran this like a sprint, one user, one job, and a definition of "done":  
 
 - **User story** - As a listing agent, I need to tell a seller what their house is worth with composure and confidence driven by market-tested statistics.  
 
@@ -124,7 +124,7 @@ python run.py --broken           # a tool fails mid-run; the assistant reports i
 python -m unittest discover -s tests
 python eval.py                   # the 12-scenario scorecard
 python bright.py ask "Is 720 Shirley St fairly priced?" --price 499000 --dom 40
-python bright.py ask "Is 720 Shirley St fairly priced?" --price 499000 --dom 40 --client bedrock   # same run, narrated through aws bedrock; needs aws credentials
+python bright.py ask "Is 720 Shirley St fairly priced?" --price 499000 --dom 40 --client bedrock   # same run, narrated through aws bedrock; needs boto3 + aws credentials
 python bright.py trace traces/<file from the run above>
 pip install -r delphi/requirements.txt && python -m delphi.app   # delphi web front, http://127.0.0.1:8000
 ```
