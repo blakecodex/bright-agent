@@ -23,6 +23,7 @@
 bright-agent/
 |-- run.py, mock_client.py      -  the two scripted runs and the mock model behind them
 |-- agent.py                    -  the agent loop
+|-- clients.py                  -  the four deciders behind one interface: mock, planner, anthropic, bedrock
 |-- tools.py                    -  the five things the loop can do
 |-- verdict.py                  -  turns the evidence into a verdict and a confidence
 |-- guardrails.py, critic.py    -  safety checks, and a second reader for the numbers
@@ -41,7 +42,7 @@ bright-agent/
 |   |--mlp_torch.py             - same net in pytorch
 |   |--train.py, predict.py, evaluate_models.py
 |   |--artifacts/               - the trained model, the cross-validation results
-|--tests/                       - 38 unit tests
+|--tests/                       - 46 unit tests
 |--delphi/                      - the web page for agents
 ```   
 ---   
@@ -51,7 +52,7 @@ bright-agent/
 ```mermaid
 flowchart LR
     Q["question"] --> L["agent.py — the loop<br/>ask the model · run its tools · repeat · stop at ten"]
-    M["clients.py<br/>mock · planner · real api"] <--> L
+    M["clients.py<br/>mock · planner · anthropic · bedrock"] <--> L
     L --> T["tools.py"]
     T --> D["data/ (sqlite)"]
     T --> P["ml/predict"]
@@ -79,9 +80,9 @@ Limitation: this is deed and county data, not MLS data. There are no list prices
 
 1. **Start with a mock model** - scripted the model's turns, so every run gives the same answer; that let me test the loop, the tools and the error handling on their own, before a real model came in.  
 
-2. **A standard loop, no framework** - ask the model what to do, run the tools it asks for, hand back the results, repeat, stop at ten turns. Frameworks do this same thing under the hood; writing it myself keeps every step visibile.  
+2. **A standard loop, no framework** - ask the model what to do, run the tools it asks for, hand back the results, repeat, stop at ten turns. Frameworks do this same thing under the hood; writing it myself keeps every step visible.  
 
-3. **The verdict is computed, not generated** - the comps and the price model each give a signal, the markets sets how much tolerance we allow, and simple arithmetic combines them. The language model only writes the explanation - it has no say in the number.  
+3. **The verdict is computed, not generated** - the comps and the price model each give a signal, the market sets how much tolerance we allow, and simple arithmetic combines them. The language model only writes the explanation - it has no say in the number.  
 
 4. **Real data instead of synthetic** - Philly deed records and Redfin county files are public, checkable, and in Bright's territory. Synthetic data would have hidden the real problems including (but not limited to): missing bedroom counts, $1 family transfers, half-reported months.  
 
@@ -107,7 +108,7 @@ Limitation: this is deed and county data, not MLS data. There are no list prices
 
 Three things this table tells me:  
 
-1. My ride matches sckikit-learn's to the third decimal, so the closed-form math is correct.  
+1. My ridge matches scikit-learn's to the third decimal, so the closed-form math is correct.  
 
 2. My numpy net lands where the pytorch net lands, so the hand-written gradients are right - a finite-difference check confirms them independently.  
 
@@ -123,6 +124,7 @@ python run.py --broken           # a tool fails mid-run; the assistant reports i
 python -m unittest discover -s tests
 python eval.py                   # the 12-scenario scorecard
 python bright.py ask "Is 720 Shirley St fairly priced?" --price 499000 --dom 40
+python bright.py ask "Is 720 Shirley St fairly priced?" --price 499000 --dom 40 --client bedrock   # same run, narrated through aws bedrock; needs aws credentials
 python bright.py trace traces/<file from the run above>
 pip install -r delphi/requirements.txt && python -m delphi.app   # delphi web front, http://127.0.0.1:8000
 ```
@@ -135,11 +137,11 @@ Nothing to install for the loop, tools, verdict or evaluation — standard libra
 
 Twelve scripted scenarios, each scored three ways:  
 
-- which tools ran, what verdict came out, and wether it was cleared or sent to an analyst;  
+- which tools ran, what verdict came out, and whether it was cleared or sent to an analyst;  
 
 - the set covers the happy path, a failing tool, clear overpricing and underpricing, a stale listing, an unknown address, a runaway model that keeps asking for tools, and two poisoned inputs that must be blocked before the loop starts;  
 
-- all twelve pass, the scorecard is saved to a file, and 38 unit tests sit underneath.
+- all twelve pass, the scorecard is saved to a file, and 46 unit tests sit underneath.
 
 ---  
 
@@ -149,6 +151,6 @@ Twelve scripted scenarios, each scored three ways:
 
 2. Two thousand sales is enough to prove the pipeline, not to ship the model; one command pulls the full year. 
 
-3. The rule-based planner cannot reason; the real-model adapter exists and is small. 
+3. The rule-based planner cannot reason; the real-model adapters (anthropic api and aws bedrock) exist and are small. 
 
 4. The text scan for prompt injection catches known phrasing, not paraphrase - the deeper defense is that the model never makes the pricing call. And the market bands are broker rules of thumb, labeled as such.
