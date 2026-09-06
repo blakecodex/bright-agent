@@ -7,3 +7,4 @@ numpy>=1.24            # ml/ - features, closed-form ridge, hand-written mlp
 # scikit-learn>=1.3    # ml/evaluate_models.py: ridge + gradient boosting as reference points
 # torch>=2.0           # ml/mlp_torch.py: the same network under autograd
 # anthropic>=0.40.0    # clients.AnthropicClient: the real-model path (needs ANTHROPIC_API_KEY)
+# boto3>=1.34          # clients.BedrockClient: the same door through aws bedrock (needs aws credentials)

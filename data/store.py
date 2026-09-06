@@ -2,9 +2,6 @@
 store.py - the local warehouse; sqlite, stdlib only.
 
 two tables:
-    - sales     - one row per recorded sale (Philly opa, ia the carto sql api)
-    - market    - one row per county, month, and property type from redfin's tracker
-two tables:
   sales   - one row per recorded sale (philadelphia opa, via the carto sql api)
   market  - one row per (county, month, property_type) from redfin's market tracker
 
@@ -24,7 +21,7 @@ CACHE_DIR = os.path.join(HERE, "cache")
 DB_PATH = os.path.join(CACHE_DIR, "bright.db")
 
 # columns we keep from the opa extract, in the order the csv pages carry them.
-# types matter for the mat later, so they're declared here.
+# types matter for the math later, so they're declared here.
 SALES_COLUMNS = [
     ("parcel", "TEXT"), ("zip", "TEXT"), ("cat", "TEXT"), ("building", "TEXT"),
     ("beds", "INTEGER"), ("baths", "INTEGER"), ("sqft", "INTEGER"), ("lot_sqft", "INTEGER"),
@@ -177,7 +174,7 @@ def comps(zip_code, beds, months=12, as_of=None, sqft=None, con=None):
         params,
     ).fetchall()
 
-    # median via row_number: middle row when odd, average of teh two middles when even
+    # median via row_number: middle row when odd, average of the two middles when even
     # and it is the same idiom redshift/postgres people reach for.
     stats = con.execute(
         """

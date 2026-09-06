@@ -5,7 +5,7 @@ fetch_redfin.py - stream redfin's national county file and keep 13 counties in b
  - the file is 240 mb compressed, so it is read line by line off the wire and never
    held in memory or written whole to disk.
 
-   python -m data.fatch_redfin
+   python -m data.fetch_redfin
 
 """
 

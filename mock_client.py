@@ -14,9 +14,10 @@ the loop must:
 
 
 class MockResponse:
-    def __init__(self, content, stop_reason):
+    def __init__(self, content, stop_reason, usage=None):
         self.content = content
         self.stop_reason = stop_reason
+        self.usage = usage   # {"input_tokens": n, "output_tokens": n} from real apis; None for scripted clients
 
 
 class MockClient:
@@ -90,7 +91,7 @@ class MockClient:
 
 
 class MalformedMockClient(MockClient):
-    """Rep-3 variant: second turn requests a tool that DOES NOT EXIST
+    """Broken variant: second turn requests a tool that DOES NOT EXIST
     and omits a required param. the loop must survive: return an error
     string as the tool_result, keep the loop alive, reach end_turn.
     """

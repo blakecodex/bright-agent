@@ -1,5 +1,5 @@
 """
-retrieval.py - keyword serach over the notes/ folder; how the assistant cites its method.
+retrieval.py - keyword search over the notes/ folder; how the assistant cites its method.
 
 same shape as a vector db: turn text into vectors -> store them -> return the nearest ones to a query.
 

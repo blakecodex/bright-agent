@@ -36,7 +36,9 @@ def run(client, user_query, tracer=None, list_price=None, days_on_market=None, t
             turns = turn + 1
             done = t.timed()
             response = client.create(messages=messages, tools=TOOL_SCHEMAS)   # send the full history, get one reply
-            t.event("model_call", turn=turns, stop_reason=response.stop_reason, latency_ms=done())
+            usage = getattr(response, "usage", None)   # real apis report tokens; scripted clients do not
+            t.event("model_call", turn=turns, stop_reason=response.stop_reason, latency_ms=done(),
+                    **({"usage": usage} if usage else {}))
 
             if response.stop_reason == "end_turn":
                 final_text = _text_of(response.content)

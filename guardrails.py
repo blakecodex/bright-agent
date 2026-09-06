@@ -3,12 +3,12 @@ guardrails.py - the three checks, in the order the data flows.
 
     1. input         - the question well formed: address shape, sane price and dom numbers
     2. tool output   - does anything a tool returned read like an instruction to the model?
-       listing remarks are teh classic prompt-injection carrier, so instruction-like
+       listing remarks are the classic prompt-injection carrier, so instruction-like
        text gets redacted before the model sees it.
     3. output        - does the final verdict have the promised shape - allowed verdict,
                        confidence between 0 and 1, and at least one reason.
 
-none of these checks call a model, so they work even when the model misbehaves,
+none of these checks call a model, so they work even when the model misbehaves.
 """
 
 import re

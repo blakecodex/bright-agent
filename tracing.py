@@ -10,7 +10,7 @@ tracing.py - the run log. one json line per event, one file per run.
         - output and errors
         - anything a guardrail cut
         - the critic's flags
-        - and where teh run was routed
+        - and where the run was routed
 
 
 observability tools like langsmith ingest exactly this shape, so exploring later should be straightforward.
@@ -84,7 +84,9 @@ def summarize(path):
         dt = f"+{r['ts'] - t0:6.3f}s"
         kind = r["kind"]
         if kind == "model_call":
-            print(f"{dt}  model   turn={r.get('turn')} stop={r.get('stop_reason')} {r.get('latency_ms')}ms")
+            u = r.get("usage") or {}
+            tok = f"  {u.get('input_tokens')}in/{u.get('output_tokens')}out tok" if u else ""
+            print(f"{dt}  model   turn={r.get('turn')} stop={r.get('stop_reason')} {r.get('latency_ms')}ms{tok}")
         elif kind == "tool_call":
             status = "error" if r.get("error") else "ok"
             print(f"{dt}  tool    {r.get('name')}({_short(r.get('input'))}) -> {status} {r.get('latency_ms')}ms")

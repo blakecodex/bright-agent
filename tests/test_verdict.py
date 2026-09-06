@@ -8,7 +8,7 @@ COMPS = {"comp_count": 4, "median_sale_price": 402_500, "window_months": 3}
 
 
 class Verdict(unittest.TestCase):
-    def test_kit_numbers_are_fair(self):
+    def test_demo_numbers_are_fair(self):
         out = verdict.assess(LISTING, comps=COMPS)
         self.assertEqual(out["verdict"], "fairly_priced")
         self.assertAlmostEqual(out["signals"]["comps_delta"], 0.031, places=3)

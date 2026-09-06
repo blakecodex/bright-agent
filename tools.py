@@ -2,7 +2,7 @@
 tools.py - the five things the assistant can do; the only file touching the data or the models.
 
 two pieces the loop relies on:
-- TOOLS_SCHEMAS     - the tool definitions the model sees (json schema)
+- TOOL_SCHEMAS     - the tool definitions the model sees (json schema)
 - execute_tool      - one dispatch function: name and inputs go in, a dict comes out, and a failure comes back
                       as an error dict, never as an exception.
 

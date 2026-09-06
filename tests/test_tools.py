@@ -30,12 +30,12 @@ class Median(unittest.TestCase):
 
 
 class Fixtures(unittest.TestCase):
-    def test_kit_comps(self):
+    def test_demo_comps(self):
         out = tools.comp_stats("21043", 3)
         self.assertEqual(out["median_sale_price"], 402500.0)
         self.assertEqual(out["comp_count"], 4)
 
-    def test_kit_listing(self):
+    def test_demo_listing(self):
         self.assertEqual(tools.lookup_listing("123 Oak St")["list_price"], 415000)
 
 

@@ -5,3 +5,5 @@ traces/eval_latest.json
 data/cache/bright.db
 .env
 DRILL.md
+bright_manual_DO-NOT-PUSH.pdf
+*_DO-NOT-PUSH.*

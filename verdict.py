@@ -3,14 +3,14 @@ verdict.py - turns the evidence into a verdict; plain arithmetic, no model.
 
 two votes - one check - one dial:
 - comps     - asking price vs the median of comparable closed sales (vote)
-- model     - asking price vs the two price models' estiamte (vote)
+- model     - asking price vs the two price models' estimate (vote)
 - ppsf      - price per sqft vs similar-sized comps; affects confidence only (check)
 - market    - days on market and months of supply set the tolerance band (dial)
 
 ppsf only checks because small homes naturally cost more per sqft (not an assumption - verifiable in the data);
 a real mismatch should lower confidence, not drag the price.
 
-returns a verdict (fairly_priced, overpriced, underpriced, insufficent_data),
+returns a verdict (fairly_priced, overpriced, underpriced, insufficient_data),
 a confidence between 0 and 1, and the reasons for the broker.
 """
 

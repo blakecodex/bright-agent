@@ -3,7 +3,7 @@
 bright.py - the command line for everything beyond the two scripted runs.
 
     python bright.py ask "Is 3358 Livingston St fairly priced?"
-    python bright.py ask "Is 720 Shirley St fairly priced?" -- price 499000 --dom
+    python bright.py ask "Is 720 Shirley St fairly priced?" --price 499000 --dom 40
     python bright.py ask "Is 123 Oak St listed at a fair price?" --client mock
     python bright.py eval                # scenario harness, prints the scorecard
     python bright.py train               # refit ridge + mlp, write ml/artifacts/model.json
@@ -97,7 +97,7 @@ def main(argv=None):
     p.add_argument("query")
     p.add_argument("--price", type=float, help="hypothetical list price (overrides last sale)")
     p.add_argument("--dom", type=int, help="listing days on market")
-    p.add_argument("--client", default="planner", choices=["planner", "mock", "broken", "real"])
+    p.add_argument("--client", default="planner", choices=["planner", "mock", "broken", "real", "bedrock"])
     p.add_argument("--json", action="store_true", help="also print the structured result")
     p.add_argument("--no-trace", action="store_true")
     p.set_defaults(fn=cmd_ask)

@@ -4,7 +4,7 @@ features.py - turn a property record into a numeric vector.
 
  - the hedonic idea: a house is a bundle of attributes, and log price is
    roughly additive in them; one FeatureSpec is fitted on the training rows (imputation
-   medians, zip vocabulatory, scaler) and frozen;
+   medians, zip vocabulary, scaler) and frozen;
    - training and predictions both call spec. transform, so vectors are always built the same way.
 
 """
@@ -43,10 +43,10 @@ class FeatureSpec:
 
     NUMERIC = ["log_sqft", "beds", "baths", "age", "log_lot", "stories", "ext_cond", "quality", "garage",
                "fireplaces", "central_air", "air_missing", "is_mf", "beds_missing", "log_assessed", "assessed_missing"]
-    # log_assessed is the city's own valuation - public before any listing exists, so usable at prediction time
-    # live, so it is fair game as a feature - an avm that ignores the assessor is leaving money on the table.
+    # log_assessed is the city's own valuation - public before any listing exists, so usable
+    # at prediction time - an avm that ignores the assessor is leaving money on the table.
 
-    def __init__(self, min_zip_count=15, hidden_target=None):
+    def __init__(self, min_zip_count=15):
         self.min_zip_count = min_zip_count
         self.zips = []          # vocabulary of one-hot zips; anything else is "other"
         self.medians = {}       # imputation values for numeric fields

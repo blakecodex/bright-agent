@@ -8,7 +8,7 @@ mlp_numpy.py - a one-hidden layer network with the gradients written by hand.
     ReLU: max(0,x). Negative inputs output zero; positives pass through.
 
  - why tanh: bounded and zero-centered; relu left dead units on this little data. 
- - why one hidden layer: enough to bend teh linear fit, and depth needs more rows
+ - why one hidden layer: enough to bend the linear fit, and depth needs more rows
    than two thousand. the optimizer is adam, also written out, and gradient_check
    at the bottom verifies the backward pass against finite differences.
 
@@ -116,7 +116,7 @@ class MLP:
 def gradient_check(n=5, d=4, h=3, eps=1e-6, seed=1):
     """
     compare the analytic gradient against finite differences on a few weights.
-    retunrs the largest relative error - if it is tiny, the backward pass is right.
+    returns the largest relative error - if it is tiny, the backward pass is right.
 
     """
     rng = np.random.default_rng(seed)

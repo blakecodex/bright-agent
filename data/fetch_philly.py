@@ -3,7 +3,7 @@
 fetch_philly.py - pull recorded sales from Philly's open-data api.
     - the endpoint takes a sql query over http and returns csv, no key needed.
     - not mls data - no asking prices or days on market - but real closed sales,
-      which is what a comp is; pages land in cache/ as gzipped csv with a cheksum each.
+      which is what a comp is; pages land in cache/ as gzipped csv with a checksum each.
 
       python -m data.fetch_philly                       # last 12 months, 500 rows per page
       python -m data.fetch_philly --since 2024-01-01    # deeper history

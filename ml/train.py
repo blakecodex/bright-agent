@@ -8,7 +8,7 @@ sales in the store, then freeze both into ml/artifacts/model.json.
 the split hashes the parcel id, not a random draw, so the same house sold twice
 never shows in both the training and the test data.
 
-both models see identical featurees, which makes their disagreement meaningful - 
+both models see identical features, which makes their disagreement meaningful - 
 the verdict lowers confidence when they diverge.
 
 """
